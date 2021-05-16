@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>World Holidays</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="item-a"><h2>World Holidays</h2></div>
+
+      <div class="item-b">
+        <h3>Select Country</h3>
+        <select id="selectCountry"></select>
+      </div>
+
+      <div class="item-c">
+        <h3>Select Holiday</h3>
+        <select id="selectHoliday"></select>
+      </div>
+
+      <div class="item-d">
+        <h3>Select State</h3>
+        <select id="selectState"></select>
+      </div>
+
+      <div class="item-e">
+        <h3>Select City</h3>
+        <select id="selectCity"></select>
+      </div>
+
+      <div class="item-f">
+        <h3>Realtime Weather based on selected city</h3>
+        Weather: <span id="weather" style="color: darkcyan"></span> Temperature:
+        <span id="temperature" style="color: darkcyan"></span> Last Updated
+        Time:
+        <span id="last_updated" style="color: darkcyan"></span>
+      </div>
+
+      <div class="item-g">
+        <h3>Weather based on selected city and selected holiday</h3>
+        Forcasted Weather:
+        <span id="forcastedWeather" style="color: darkcyan"></span> Heightest
+        Temperature:
+        <span id="heightestTemperature" style="color: darkcyan"></span> Lowest
+        Temperature:
+        <span id="lowestTemperature" style="color: darkcyan"></span> Average
+        Temperature:
+        <span id="averageTemperature" style="color: darkcyan"></span>
+      </div>
+
+      <div class="item-h">
+        <button id="hotel">Search accommodation rental</button>
+        <h3 id="hotel_city"></h3>
+        <table border="1">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Rating</th>
+              <th>Address</th>
+              <th>Amenities</th>
+              <th>Contact</th>
+            </tr>
+          </thead>
+          <tbody id="hotelInfo"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+    <script
+      type="text/javascript"
+      src="https://cdn.bootcss.com/qs/6.7.0/qs.min.js"
+    ></script>
+    <script src="./js/axios.js"></script>
+
+    <script>
+      var auth_token;
+      const request_auth_token = {
+        method: "GET",
+        url: "https://www.universal-tutorial.com/api/getaccesstoken",
+        headers: {
+          Accept: "application/json",
+          "api-token":
+            "f-eN2v26-LJs2VlmyUPay5MjbS87tT_MrFRk7vfivn0sagsDE9_D9WW6LKBCGM-HYo4",
+          "user-email": "cui19991113@gmail.com",
+        },
+      };
+      axios
+        .request(request_auth_token)
+        .then(function (response) {
+          console.log(response.data);
+          auth_token = response.data.auth_token;
+        })
+        .catch(function (error) {
+          console.error(error);
+        });
+
+      var hotel_token;
+      const request_hotel_token = {
+        method: "POST",
+        url: "https://test.api.amadeus.com/v1/security/oauth2/token",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        data: Qs.stringify({
+          grant_type: "client_credentials",
+          client_id: "FxaNCT4fujbIS4jm4UZOm7njutA83GDO",
+          client_secret: "pcVD6ZYFPXeI0DgY",
+        }),
+      };
+      axios
+        .request(request_hotel_token)
+        .then(function (response) {
+          console.log(response.data);
+          hotel_token = response.data.access_token;
+        })
+        .catch(function (error) {
+          console.error(error);
+        });
+
+      var country;
+      var country_short_name;
+      var state;
+      var city;
+      var nowDate;
+      var selectedDate;
+      var checkinDate;
+      var lat;
+      var lon;
+
+      // list countries
+      $("#selectCountry").click(function () {
+        $("#selectState").empty();
+        $("#selectCity").empty();
+        $("#selectHoliday").empty();
+        const request_countries = {
+          method: "GET",
+          url: "https://www.universal-tutorial.com/api/countries/",
+          headers: {
+            Accept: "application/json",
+            Authorization: "Bearer " + auth_token,
+          },
+        };
+
+        axios
+          .request(request_countries)
+          .then(function (response) {
+            console.log(response.data);
+            var countries = response.data;
+
+            for (j = 0, len = countries.length; j < len; j++) {
+              $("#selectCountry").append(
+                "<option value=" +
+                  countries[j].country_short_name +
+                  ">" +
+                  countries[j].country_name +
+                  "</option>"
+              );
+            }
+            country = $("#selectCountry option:selected").text();
+            country_short_name = $("#selectCountry option:selected").val();
+            console.log(country);
+          })
+          .catch(function (error) {
+            console.error(error);
+          });
+      });
+
+      //list states
+      $("#selectState").click(function () {
+        $("#selectCity").empty();
+        const request_states = {
+          method: "GET",
+          url: "https://www.universal-tutorial.com/api/states/" + country,
+          headers: {
+            Accept: "application/json",
+            Authorization: "Bearer " + auth_token,
+          },
+        };
+
+        axios
+          .request(request_states)
+          .then(function (response) {
+            console.log(response.data);
+
+            var states = response.data;
+            for (j = 0, len = states.length; j < len; j++) {
+              $("#selectState").append(
+                "<option value=" +
+                  states[j].state_name +
+                  ">" +
+                  states[j].state_name +
+                  "</option>"
+              );
+              state = $("#selectState option:selected").text();
+            }
+          })
+          .catch(function (error) {
+            console.error(error);
+          });
+      });
+
+      //list cities
+      $("#selectCity").click(function () {
+        const request_cities = {
+          method: "GET",
+          url: "https://www.universal-tutorial.com/api/cities/" + state,
+          headers: {
+            Accept: "application/json",
+            Authorization: "Bearer " + auth_token,
+          },
+        };
+
+        axios
+          .request(request_cities)
+          .then(function (response) {
+            console.log(response.data);
+
+            var cities = response.data;
+            for (j = 0, len = cities.length; j < len; j++) {
+              $("#selectCity").append(
+                "<option value=" +
+                  cities[j].city_name +
+                  ">" +
+                  cities[j].city_name +
+                  "</option>"
+              );
+            }
+            city = $("#selectCity option:selected").text();
+
+            // request weather based on the selected city
+            const request_weather = {
+              method: "GET",
+              url: "http://api.weatherapi.com/v1/current.json",
+              params: {
+                key: "754ff344c9bd487d98e85254212804",
+                q: city,
+              },
+            };
+
+            axios
+              .request(request_weather)
+              .then(function (response) {
+                console.log(response.data);
+                nowDate = new Date(
+                  response.data.location.localtime.substring(0, 10)
+                );
+                lat = response.data.location.lat;
+                lon = response.data.location.lon;
+                console.log(nowDate);
+                document.getElementById("weather").textContent =
+                  response.data.current.condition.text;
+                document.getElementById("temperature").textContent =
+                  response.data.current.temp_c;
+                document.getElementById("last_updated").textContent =
+                  response.data.current.last_updated;
+              })
+              .catch(function (error) {
+                console.error(error);
+              });
+
+            console.log(
+              parseInt((selectedDate - nowDate) / (1000 * 60 * 60 * 24))
+            );
+            // request weather based on the selected city and seelcetd holiday
+            var day = parseInt(
+              (selectedDate - nowDate) / (1000 * 60 * 60 * 24)
+            );
+            if (day <= 3) {
+              const request_forecast_weather = {
+                method: "GET",
+                url: "http://api.weatherapi.com/v1/forecast.json",
+                params: {
+                  key: "754ff344c9bd487d98e85254212804",
+                  q: city,
+                  days: day,
+                },
+              };
+
+              axios
+                .request(request_forecast_weather)
+                .then(function (response) {
+                  console.log(response.data.forecast.forecastday);
+                  document.getElementById("forcastedWeather").textContent =
+                    response.data.forecast.forecastday[
+                      day - 1
+                    ].day.condition.text;
+                  document.getElementById("heightestTemperature").textContent =
+                    response.data.forecast.forecastday[day - 1].day.maxtemp_c;
+                  document.getElementById("lowestTemperature").textContent =
+                    response.data.forecast.forecastday[day - 1].day.mintemp_c;
+                  document.getElementById("averageTemperature").textContent =
+                    response.data.forecast.forecastday[day - 1].day.avgtemp_c;
+                })
+                .catch(function (error) {
+                  console.error(error);
+                });
+            } else {
+              document.getElementById("forcastedWeather").textContent =
+                "Sorry, the holiday is too far";
+              document.getElementById("heightestTemperature").textContent =
+                "Sorry, the holiday is too far";
+              document.getElementById("lowestTemperature").textContent =
+                "Sorry, the holiday is too far";
+              document.getElementById("averageTemperature").textContent =
+                "Sorry, the holiday is too far";
+            }
+          })
+          .catch(function (error) {
+            console.error(error);
+          });
+      });
+
+      //list holidays
+      $("#selectHoliday").click(function () {
+        const request_holidays = {
+          method: "GET",
+          url: "https://calendarific.com/api/v2/holidays",
+          headers: {
+            Accept: "application/json",
+          },
+          params: {
+            api_key: "7ba9800a514debffc11c50f5d5842ea855c81f7c",
+            country: country_short_name,
+            year: 2021,
+          },
+        };
+
+        axios
+          .request(request_holidays)
+          .then(function (response) {
+            console.log(response.data.response.holidays);
+            var holidays = response.data.response.holidays;
+            for (j = 0, len = holidays.length; j < len; j++) {
+              $("#selectHoliday").append(
+                "<option value=" +
+                  holidays[j].date.iso +
+                  ">" +
+                  holidays[j].date.iso +
+                  ": " +
+                  holidays[j].name +
+                  "</option>"
+              );
+            }
+            selectedDate = new Date($("#selectHoliday option:selected").val());
+            checkinDate = $("#selectHoliday option:selected").val();
+            console.log(selectedDate);
+            console.log(checkinDate);
+          })
+          .catch(function (error) {
+            console.error(error);
+          });
+      });
+
+      //show rentel information
+      $("#hotel").click(function () {
+        document.getElementById("hotel_city").innerText =
+          "Short-term accommodation rental information in " +
+          city +
+          ", " +
+          checkinDate;
+        const request_hotel = {
+          method: "GET",
+          url: "https://test.api.amadeus.com/v2/shopping/hotel-offers",
+          headers: {
+            Accept: "application/json",
+            Authorization: "Bearer " + hotel_token,
+          },
+          params: {
+            latitude: lat,
+            longitude: lon,
+            radius: 30,
+            radiusUnit: "KM",
+            //bestRateOnly: false,
+            checkInDate: checkinDate,
+            includeClosed: true,
+            sort: "DISTANCE",
+          },
+        };
+
+        axios
+          .request(request_hotel)
+          .then(function (response) {
+            console.log(response.data);
+            var hotels = response.data.data;
+            if (hotels.length == 0) {
+              $("#hotelInfo").append("<h3> Sorry, no available rentals </h3>");
+            } else {
+              for (j = 0, len = hotels.length; j < len; j++) {
+                $("#hotelInfo").append(
+                  "<tr>" +
+                    "<td>" +
+                    hotels[j].hotel.name +
+                    "</td>" +
+                    "<td>" +
+                    hotels[j].hotel.rating +
+                    "</td>" +
+                    "<td>" +
+                    hotels[j].hotel.address.lines[0] +
+                    "</td>" +
+                    "<td style='word-wrap:break-word;word-break:break-all;' width='600px';>" +
+                    hotels[j].hotel.amenities +
+                    "</td>" +
+                    "<td>" +
+                    "Phone: " +
+                    hotels[j].hotel.contact.phone +
+                    "<br>" +
+                    "Fax: " +
+                    hotels[j].hotel.contact.fax +
+                    "</td>" +
+                    "</tr>"
+                );
+              }
+            }
+          })
+          .catch(function (error) {
+            console.error(error);
+          });
+      });
+    </script>
+  </body>
+</html>

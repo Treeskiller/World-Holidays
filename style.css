@@ -1,0 +1,52 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: cornsilk;
+  /* outline: 1px dashed purple; */
+}
+
+.container {
+  display: grid;
+
+  width: 100%;
+  height: 100vh;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto;
+  grid-column-gap: 0px;
+  grid-row-gap: 15px;
+  grid-template-areas:
+    "header header"
+    "country country"
+    "holiday holiday"
+    "state state"
+    "city city"
+    "todayweather todayweather"
+    "holidayweather holidayweather"
+    "hotel hotel";
+}
+.item-a {
+  grid-area: header;
+  justify-self: center;
+}
+.item-b {
+  grid-area: country;
+}
+.item-c {
+  grid-area: holiday;
+}
+.item-d {
+  grid-area: state;
+}
+.item-e {
+  grid-area: city;
+}
+.item-f {
+  grid-area: todayweather;
+}
+.item-g {
+  grid-area: holidayweather;
+}
+.item-h {
+  grid-area: hotel;
+}
