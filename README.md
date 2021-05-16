@@ -1,2 +1,2 @@
 # World Holidays
- 
+The project designs a website using Country, State and City Component Holiday Component, Weather Component and Rental Component. The project is programmed by HTML, uses javascript and jQuery to adjust the components and uses Axios to send requests and get responses. Users can use the website to see a list of public holidays for a selected country, select the area (probably state, province, or city) they are residing as well as a public holiday from the list so that they see the weather information and the available short-term accommodation rental information for the selected public holiday in the area.
